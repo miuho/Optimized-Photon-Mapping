@@ -1,0 +1,55 @@
+*****************
+* writeup.txt   *
+* HingOn Miu    *
+* hmiu          *
+*****************
+
+Implementation decisions:
+1.) To further optimize the intersection tests, I implemented bounding box 
+    intersection test for each geometry. Before checking if a ray intersects
+    with a geometry, I first check if the ray intersects if its bounding
+    box. Since the bounding box test has much simpler calculation than the
+    normal geometry intersection test, the optimization achieves a nice
+    speed up.
+    
+2.) Besides the intensity, incident direction, and position of the photon,
+    I decide to include a char type flag. It indicates the type of node of
+    this photon in the kd-tree. If it is a leaf node, it has a flag LEAF. If
+    it is a non-leaf node, it has either X_AXIS, Y_AXIS, or Z_AXIS, depending
+    on which splitting axis is used for that node. Hence, the simple checking
+    of the photon flag optimizes the nearest neighbors search.
+
+3.) To optimize the speed of nearest neighbors search, I decide to choose
+    the splitting axis by the dimension with the maximum variance. Therefore,
+    the dimension that has largest variance gets splitted each time, and so
+    the closeby photons would be more clustered and further photons would be
+    more distributed in the kd-tree.
+
+4.) To save memory usage, I use an array implementation of kd-tree. Instead
+    of allocating lots of nodes to build a kd-tree, I maintain the kd-tree
+    structure inside the array without allocating any new memory. In each
+    recursive call, I find the maximum variance and decide the splitting
+    axis. Then I sort the range of the array and find the photon at the
+    median of the range of the array. Since calculating the median index
+    is deterministic with the given range, I can always find the current
+    node in the later nearest neighbors search quickly by finding the median
+    photon in the range of the array.
+    
+5.) To save memory usage, I decide to maintain the length of the neighbors
+    list. Therefore, the neighbors list removes an element if it is full and
+    finds another closer element.
+
+6.) To optimize nearest neighbors search, the each neighbor element contains
+    the index of the photon in photon map and the squared distance calculated
+    from the photon to the intersection. Therefore, when looking for the
+    furthest neighbor to remove, there is no need to recalculate the square
+    distance of each neighbor.
+    
+7.) To optimize nearest neighbors search, I use a array implementation of
+    max heap to collect the neighbors. Since the furthest neighbor is always
+    stored in the root node of the max heap, checking the furthest square
+    distance is O(1). Then, inserting and removing a neighbor is O(log n).
+
+8.) To optimize nearest neighbors search, the neighbors list is allocated
+    in much earlier stage such that it is reusable for each nearest neighbors
+    search.
